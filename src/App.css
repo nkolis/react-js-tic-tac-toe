@@ -1,0 +1,98 @@
+:root {
+  --shape-color-o: purple;
+  --shape-color-x: salmon;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.header {
+  padding: 0;
+}
+
+.game {
+  position: relative;
+  display: flex;
+  place-items: center;
+  max-width: 500px;
+}
+
+.board {
+  position: relative;
+  background-color: rgb(59, 59, 59);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(50px, 100px));
+  gap: 10px;
+}
+
+
+.square {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  background-color: #ffffff;
+  outline: none;
+  border: none;
+  display: flex;
+  place-items: center;
+  place-content: center;
+}
+
+.shape-o,
+.shape-x {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.shape-o {
+  border-radius: 50px;
+  background: radial-gradient(transparent 30px, var(--shape-color-o) 31px);
+}
+
+.shape-x {
+  display: flex;
+  place-content: center;
+  place-items: center;
+}
+
+.shape-x span {
+  position: absolute;
+  width: inherit;
+  height: 10px;
+  background-color: var(--shape-color-x);
+}
+
+.shape-x span:nth-child(1) {
+  rotate: 45deg;
+}
+
+.shape-x span:nth-child(2) {
+  rotate: -45deg;
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+@media screen and (max-width: 300px) {
+  .square {
+    width: 50px;
+    height: 50px;
+  }
+}
