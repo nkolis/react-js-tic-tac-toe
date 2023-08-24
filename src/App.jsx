@@ -28,16 +28,22 @@ function Board({ xIsNext, squares, onPlay }) {
 
   function handleClick(i) {
     if (squares[i] || winner.status) return false;
-    const nextSquares = squares.slice();
-    nextSquares[i] = xIsNext ? "x" : "o";
-    onPlay(nextSquares);
+    let nextSquares = squares.slice();
+    if (xIsNext) {
+      nextSquares[i] = "x";
+      onPlay(nextSquares);
+    }
   }
 
   return (
     <>
       <div className={`board ${winLineStyle}`}>
         {squares.map((val, i) => (
-          <Square key={i} onSquareClick={() => handleClick(i)} value={val} />
+          <Square
+            key={i}
+            onSquareClick={() => (xIsNext ? handleClick(i) : false)}
+            value={val}
+          />
         ))}
       </div>
     </>
@@ -73,6 +79,14 @@ export default function Game() {
 
   let status = `Next Player: ${xIsNext ? "X" : "O"}`;
   const winner = calculateWinner(currentSquares);
+
+  if (!xIsNext && !winner.status) {
+    setTimeout(() => {
+      handlePlay(botPlay(currentSquares, "o"));
+      clearTimeout();
+    }, 300);
+  }
+
   if (winner.status && winner.message != "draw") {
     status = "Winner: " + winner.message.toUpperCase();
   }
@@ -91,7 +105,7 @@ export default function Game() {
           <Board
             xIsNext={xIsNext}
             squares={currentSquares}
-            onPlay={handlePlay}
+            onPlay={xIsNext ? handlePlay : false}
           />
         </div>
         <div className="game-info">
@@ -100,6 +114,47 @@ export default function Game() {
       </div>
     </>
   );
+}
+
+function botPlay(currentSquares, char) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  const squares = currentSquares.slice();
+  for (let line of lines) {
+    const [a, b, c] = line;
+    if (squares[a] != null && squares[a] == squares[c] && squares[b] == null) {
+      squares[b] = char;
+      return squares;
+    }
+    if (squares[a] != null && squares[a] == squares[b] && squares[c] == null) {
+      squares[c] = char;
+      return squares;
+    }
+    if (squares[c] != null && squares[c] == squares[b] && squares[a] == null) {
+      squares[a] = char;
+      return squares;
+    }
+  }
+
+  const nullSquares = [];
+  squares.forEach((square, i) => {
+    if (square == null) {
+      nullSquares.push(i);
+    }
+  });
+  const index = Math.floor(Math.random() * (nullSquares.length - 1));
+  const randomSquare = nullSquares[index];
+  console.log(randomSquare);
+  squares[randomSquare] = char;
+  return squares;
 }
 
 function calculateWinner(squares) {
