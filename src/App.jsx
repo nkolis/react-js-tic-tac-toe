@@ -4,33 +4,32 @@ import O_shape from "./components/O_shape";
 import X_shape from "./components/X_shape";
 
 function Square({ onSquareClick, value }) {
+  function handleClicked() {
+    return onSquareClick();
+  }
+
   return (
-    <button className="square" onClick={onSquareClick}>
+    <button className="square" onClick={handleClicked}>
       {value == "x" ? <X_shape /> : ""}
       {value == "o" ? <O_shape /> : ""}
     </button>
   );
 }
 
-function Board({ xIsNext, squares, onPlay }) {
-  const [winLineStyle, setWinLineStyle] = useState("");
-  const winner = calculateWinner(squares);
-  useEffect(() => {
-    let winLine;
-    if (winner.status && winner.message != "draw") {
-      winLine = winner.line;
-      const line = winLine.line[0];
-      setWinLineStyle(`win-line-${squares[line]}-${winLine.position}`);
-    } else {
-      setWinLineStyle("");
-    }
-  }, [winner]);
-
+function Board({
+  playerIsNext,
+  player,
+  squares,
+  onPlay,
+  winner,
+  winLineStyle,
+}) {
   function handleClick(i) {
     if (squares[i] || winner.status) return false;
+
     let nextSquares = squares.slice();
-    if (xIsNext) {
-      nextSquares[i] = "x";
+    if (playerIsNext) {
+      nextSquares[i] = player;
       onPlay(nextSquares);
     }
   }
@@ -41,7 +40,7 @@ function Board({ xIsNext, squares, onPlay }) {
         {squares.map((val, i) => (
           <Square
             key={i}
-            onSquareClick={() => (xIsNext ? handleClick(i) : false)}
+            onSquareClick={() => (playerIsNext ? handleClick(i) : () => false)}
             value={val}
           />
         ))}
@@ -53,8 +52,23 @@ function Board({ xIsNext, squares, onPlay }) {
 export default function Game() {
   const [history, setHistory] = useState([Array(9).fill(null)]);
   const [currentMove, setCurrentMove] = useState(0);
-  const xIsNext = currentMove % 2 == 0;
+  const [player, setPlayer] = useState("o");
+  const [computer, setComputer] = useState("x");
+  const [status, setStatus] = useState("");
+  const [firstMove, setFirstMove] = useState(0);
+  const playerIsNext = currentMove % 2 == firstMove;
   const currentSquares = history[currentMove];
+  const winner = calculateWinner(currentSquares);
+  const [winLineStyle, setWinLineStyle] = useState("");
+  const [animationDelay, setAnimationDelay] = useState(true);
+  const delay = 1000;
+  const [clicked, setClicked] = useState(false);
+
+  const [score, setScore] = useState({
+    player: 0,
+    draw: 0,
+    computer: 0,
+  });
 
   function handlePlay(nextSquares) {
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
@@ -62,36 +76,76 @@ export default function Game() {
     setCurrentMove(nextHistory.length - 1);
   }
 
-  const moves = history.map((squares, move) => {
-    let description = "";
-    if (move > 0) {
-      description = "Go to move#" + move;
-    } else {
-      description = "Go to game start";
+  function refresh() {
+    setClicked(false);
+    setAnimationDelay(true);
+    setCurrentMove(0);
+  }
+
+  function restart() {
+    setClicked(false);
+    setHistory([Array(9).fill(null)]);
+    setCurrentMove(0);
+    setFirstMove(0);
+    setScore({
+      player: 0,
+      draw: 0,
+      computer: 0,
+    });
+    return false;
+  }
+
+  function swapPlayer() {
+    if (!clicked) {
+      restart();
+      firstMove == 0 ? setFirstMove(1) : setFirstMove(0);
+      setClicked(true);
     }
 
-    return (
-      <li key={move} className="history">
-        <button onClick={() => setCurrentMove(move)}>{description}</button>
-      </li>
-    );
-  });
-
-  let status = `Next Player: ${xIsNext ? "X" : "O"}`;
-  const winner = calculateWinner(currentSquares);
-
-  if (!xIsNext && !winner.status) {
     setTimeout(() => {
-      handlePlay(botPlay(currentSquares, "o"));
-      clearTimeout();
-    }, 300);
+      setClicked(false);
+    }, 1000);
   }
 
-  if (winner.status && winner.message != "draw") {
-    status = "Winner: " + winner.message.toUpperCase();
-  }
-  if (winner.status && winner.message == "draw") {
-    status = "Draw";
+  useEffect(() => {
+    setStatus(`Next player: ${playerIsNext ? player : computer}`);
+    if (winner.status && winner.message != "draw") {
+      const line = winner.line.line[0];
+      setWinLineStyle(
+        `win-line-${currentSquares[line]}-${winner.line.position}`
+      );
+      setStatus("Winner: " + winner.message.toUpperCase());
+      if (winner.message == player) {
+        const newScore = score.player + 1;
+        setScore({ ...score, player: newScore });
+      }
+      if (winner.message == computer) {
+        const newScore = score.computer + 1;
+        setScore({ ...score, computer: newScore });
+      }
+      setTimeout(() => {
+        setAnimationDelay(false);
+      }, delay);
+    } else {
+      setWinLineStyle("");
+    }
+    if (winner.status && winner.message == "draw") {
+      setStatus("Draw");
+      const newScore = score.draw + 1;
+      setScore({ ...score, draw: newScore });
+      setTimeout(() => {
+        setAnimationDelay(false);
+      }, delay);
+    }
+
+    return () => {};
+  }, [currentMove]);
+
+  if (!playerIsNext && !winner.status) {
+    setTimeout(() => {
+      handlePlay(botPlay(currentSquares, computer));
+    }, 600);
+    clearTimeout();
   }
 
   return (
@@ -101,22 +155,73 @@ export default function Game() {
         <h4 className="game-status">{status}</h4>
       </div>
       <div className="game">
-        <div className="game-board">
+        <div
+          className="game-board"
+          onClick={!animationDelay ? refresh : () => false}
+        >
           <Board
-            xIsNext={xIsNext}
+            playerIsNext={playerIsNext}
+            player={player}
             squares={currentSquares}
-            onPlay={xIsNext ? handlePlay : false}
+            onPlay={playerIsNext ? handlePlay : false}
+            winner={winner}
+            winLineStyle={winLineStyle}
           />
         </div>
         <div className="game-info">
-          <ul>{moves}</ul>
+          <div className="game-reset">
+            <button
+              onClick={restart}
+              disabled={currentMove == 0 ? true : false}
+            >
+              Restart Game
+            </button>
+          </div>
+          <div className="game-score">
+            <div
+              className="score-info"
+              style={{ order: firstMove == 0 ? 1 : 3 }}
+            >
+              <p className="name">Player</p>
+              <p className="score">{score.player}</p>
+            </div>
+            <div className="score-info" style={{ order: 2 }}>
+              {history.length == 1 ? (
+                <button
+                  className="swap-player"
+                  onClick={swapPlayer}
+                  disabled={clicked}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    height="1em"
+                    viewBox="0 0 512 512"
+                  >
+                    <path d="M32 96l320 0V32c0-12.9 7.8-24.6 19.8-29.6s25.7-2.2 34.9 6.9l96 96c6 6 9.4 14.1 9.4 22.6s-3.4 16.6-9.4 22.6l-96 96c-9.2 9.2-22.9 11.9-34.9 6.9s-19.8-16.6-19.8-29.6V160L32 160c-17.7 0-32-14.3-32-32s14.3-32 32-32zM480 352c17.7 0 32 14.3 32 32s-14.3 32-32 32H160v64c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9l-96-96c-6-6-9.4-14.1-9.4-22.6s3.4-16.6 9.4-22.6l96-96c9.2-9.2 22.9-11.9 34.9-6.9s19.8 16.6 19.8 29.6l0 64H480z" />
+                  </svg>
+                </button>
+              ) : (
+                <>
+                  <p className="name">Draw</p>
+                  <p className="score">{score.draw}</p>
+                </>
+              )}
+            </div>
+            <div
+              className="score-info"
+              style={{ order: firstMove == 1 ? 1 : 3 }}
+            >
+              <p className="name">Computer</p>
+              <p className="score">{score.computer}</p>
+            </div>
+          </div>
         </div>
       </div>
     </>
   );
 }
 
-function botPlay(currentSquares, char) {
+function botPlay(currentSquares, char, difficulty = "hard") {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -128,6 +233,39 @@ function botPlay(currentSquares, char) {
     [2, 4, 6],
   ];
   const squares = currentSquares.slice();
+  // to choose the winning square line
+  for (let line of lines) {
+    const [a, b, c] = line;
+    if (
+      squares[a] != null &&
+      squares[a] == char &&
+      squares[c] == char &&
+      squares[b] == null
+    ) {
+      squares[b] = char;
+      return squares;
+    }
+    if (
+      squares[a] != null &&
+      squares[a] == char &&
+      squares[b] == char &&
+      squares[c] == null
+    ) {
+      squares[c] = char;
+      return squares;
+    }
+    if (
+      squares[c] != null &&
+      squares[c] == char &&
+      squares[b] == char &&
+      squares[a] == null
+    ) {
+      squares[a] = char;
+      return squares;
+    }
+  }
+
+  // to intercept the oppenent win
   for (let line of lines) {
     const [a, b, c] = line;
     if (squares[a] != null && squares[a] == squares[c] && squares[b] == null) {
@@ -144,6 +282,39 @@ function botPlay(currentSquares, char) {
     }
   }
 
+  //to create a win probability line
+  for (let line of lines) {
+    const [a, b, c] = line;
+    if (squares[a] == char && squares[b] == null && squares[c] == null) {
+      const rand = Math.floor(Math.random() * 2);
+      if (rand == 0) {
+        squares[b] = char;
+      } else {
+        squares[c] = char;
+      }
+      return squares;
+    }
+    if (squares[a] == null && squares[b] == char && squares[c] == null) {
+      const rand = Math.floor(Math.random() * 2);
+      if (rand == 0) {
+        squares[a] = char;
+      } else {
+        squares[c] = char;
+      }
+      return squares;
+    }
+    if (squares[a] == null && squares[b] == null && squares[c] == char) {
+      const rand = Math.floor(Math.random() * 2);
+      if (rand == 0) {
+        squares[a] = char;
+      } else {
+        squares[b] = char;
+      }
+      return squares;
+    }
+  }
+
+  //choose a square randomly
   const nullSquares = [];
   squares.forEach((square, i) => {
     if (square == null) {
@@ -152,7 +323,6 @@ function botPlay(currentSquares, char) {
   });
   const index = Math.floor(Math.random() * (nullSquares.length - 1));
   const randomSquare = nullSquares[index];
-  console.log(randomSquare);
   squares[randomSquare] = char;
   return squares;
 }
