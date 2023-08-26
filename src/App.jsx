@@ -40,7 +40,7 @@ function Board({
         {squares.map((val, i) => (
           <Square
             key={i}
-            onSquareClick={() => (playerIsNext ? handleClick(i) : () => false)}
+            onSquareClick={playerIsNext ? () => handleClick(i) : () => false}
             value={val}
           />
         ))}
@@ -57,6 +57,7 @@ export default function Game() {
   const [status, setStatus] = useState("");
   const [firstMove, setFirstMove] = useState(0);
   const playerIsNext = currentMove % 2 == firstMove;
+  const [botIsPlay, setBotIsPlay] = useState(false);
   const currentSquares = history[currentMove];
   const winner = calculateWinner(currentSquares);
   const [winLineStyle, setWinLineStyle] = useState("");
@@ -77,9 +78,15 @@ export default function Game() {
   }
 
   function refresh() {
-    setClicked(false);
-    setAnimationDelay(true);
     setCurrentMove(0);
+    console.log(firstMove);
+
+    setTimeout(() => {
+      setClicked(false);
+      setAnimationDelay(false);
+    }, delay);
+
+    return false;
   }
 
   function restart() {
@@ -133,15 +140,13 @@ export default function Game() {
       setStatus("Draw");
       const newScore = score.draw + 1;
       setScore({ ...score, draw: newScore });
-      setTimeout(() => {
-        setAnimationDelay(false);
-      }, delay);
     }
 
     return () => {};
   }, [currentMove]);
 
   if (!playerIsNext && !winner.status) {
+    // setBotIsPlay(true);
     setTimeout(() => {
       handlePlay(botPlay(currentSquares, computer));
     }, 600);
@@ -157,13 +162,17 @@ export default function Game() {
       <div className="game">
         <div
           className="game-board"
-          onClick={!animationDelay ? refresh : () => false}
+          onClick={
+            !animationDelay && winner.status && currentMove > 0
+              ? refresh
+              : () => false
+          }
         >
           <Board
             playerIsNext={playerIsNext}
             player={player}
             squares={currentSquares}
-            onPlay={playerIsNext ? handlePlay : false}
+            onPlay={playerIsNext ? handlePlay : () => false}
             winner={winner}
             winLineStyle={winLineStyle}
           />
@@ -172,7 +181,7 @@ export default function Game() {
           <div className="game-reset">
             <button
               onClick={restart}
-              disabled={currentMove == 0 ? true : false}
+              disabled={history.length == 1 ? true : false}
             >
               Restart Game
             </button>
