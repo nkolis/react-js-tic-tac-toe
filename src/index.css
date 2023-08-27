@@ -5,7 +5,7 @@
     --shape-size: 60px;
     --shape-color-o: rgb(0, 156, 218);
     --shape-color-x: rgb(202, 75, 60);
-
+    --square-size: 100px;
   }
 
   * {
@@ -36,16 +36,13 @@
     text-align: center;
   }
 
-  .header {
+  .header,
+  game {
     padding: 0;
   }
 
-  .header .game-title {
-    margin-top: 10px;
-  }
-
   .header .game-status {
-    margin-bottom: 50px;
+    margin-bottom: 20px;
   }
 
 
@@ -78,7 +75,7 @@
     background-color: rgb(115, 142, 146);
     display: grid;
     grid-template-columns: repeat(3, max-content);
-    gap: 10px;
+    gap: 6px;
   }
 
 
@@ -107,65 +104,65 @@
 
   .win-line-x-h-1::after,
   .win-line-o-h-1::after {
-    margin-top: calc(((80px / 2) - 5px));
+    margin-top: calc((var(--square-size) / 2) - 5px);
   }
 
   .win-line-x-h-2::after,
   .win-line-o-h-2::after {
-    margin-top: calc(((80px / 2) - 5px) * 3.57);
+    margin-top: calc((var(--square-size) / 2 * 3) + 2px);
   }
 
   .win-line-x-h-3::after,
   .win-line-o-h-3::after {
-    margin-top: calc(((80px / 2) - 5px) * 6.13);
+    margin-top: calc((var(--square-size) / 2 * 5) + 7px);
   }
 
   [class*='win-line-x-v']::after,
   [class*='win-line-o-v']::after {
-    rotate: 90deg;
+    transform: rotateZ(90deg);
     transform-origin: 5px;
   }
 
   .win-line-x-v-1::after,
   .win-line-o-v-1::after {
-    margin-left: calc(((80px / 2) - 5px));
+    margin-left: calc((var(--square-size) / 2) - 5px);
   }
 
   .win-line-x-v-2::after,
   .win-line-o-v-2::after {
-    margin-left: calc(((80px / 2) - 5px) * 3.57);
+    margin-left: calc((var(--square-size) / 2 * 3) + 2px);
   }
 
   .win-line-x-v-3::after,
   .win-line-o-v-3::after {
-    margin-left: calc(((80px / 2) - 5px) * 6.13);
+    margin-left: calc((var(--square-size) / 2 * 5) + 7px);
   }
 
 
   [class*='win-line-x-d']::after,
   [class*='win-line-o-d']::after {
-    transform-origin: 0;
+    transform-origin: 0px;
     animation: winAnimationDiagonal 0.2s 1 0.4s forwards linear;
   }
 
   .win-line-x-d-r::after,
   .win-line-o-d-r::after {
-    margin-left: 98%;
-    rotate: 135deg;
+    left: calc(var(--square-size) * 3 + 7px);
+    transform: rotateZ(135deg);
 
   }
 
   .win-line-x-d-l::after,
   .win-line-o-d-l::after {
-    left: 2%;
-    rotate: 45deg;
+    left: 5px;
+    transform: rotateZ(45deg);
   }
 
 
   .square {
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     background-color: #ffffff;
     outline: none;
     border: none;
@@ -210,11 +207,11 @@
   }
 
   .shape-x span:nth-child(1) {
-    rotate: 45deg;
+    transform: rotateZ(45deg);
   }
 
   .shape-x span:nth-child(2) {
-    rotate: -45deg;
+    transform: rotateZ(-45deg);
   }
 
   .game-info {
@@ -260,7 +257,7 @@
     }
 
     to {
-      width: calc(80px * 4 + 34px);
+      width: calc(var(--square-size) * 4 + 34px);
     }
   }
 
@@ -275,23 +272,13 @@
   }
 
 
-  @keyframes logo-spin {
-    from {
-      transform: rotate(360deg);
-    }
-
-    to {
-      transform: rotate(0deg);
-    }
-  }
-
   @keyframes scale-x {
     from {
-      scale: 0;
+      transform: scale(0);
     }
 
     to {
-      scale: 1;
+      transform: scale(1);
     }
   }
 
@@ -387,20 +374,16 @@
 
 
 
-  @media (prefers-reduced-motion: no-preference) {
-    a:nth-of-type(2) .logo {
-      animation: logo-spin infinite 20s linear;
-    }
 
-    .scale-shape-x {
-      animation: scale-x 0.2s 1 linear;
-    }
 
-    .gradient-shape-o {
-      animation: gradientAnimation 0.3s 1 forwards linear;
-    }
-
+  .scale-shape-x {
+    animation: scale-x 0.2s 1 linear;
   }
+
+  .gradient-shape-o {
+    animation: gradientAnimation 0.2s 1 forwards linear;
+  }
+
 
   @media screen and (max-width: 400px) {
     /* 

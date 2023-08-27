@@ -57,12 +57,11 @@ export default function Game() {
   const [status, setStatus] = useState("");
   const [firstMove, setFirstMove] = useState(0);
   const playerIsNext = currentMove % 2 == firstMove;
-  const [botIsPlay, setBotIsPlay] = useState(false);
   const currentSquares = history[currentMove];
   const winner = calculateWinner(currentSquares);
   const [winLineStyle, setWinLineStyle] = useState("");
   const [animationDelay, setAnimationDelay] = useState(true);
-  const delay = 1000;
+  const delay = 600;
   const [clicked, setClicked] = useState(false);
 
   const [score, setScore] = useState({
@@ -72,20 +71,16 @@ export default function Game() {
   });
 
   function handlePlay(nextSquares) {
-    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
-    setHistory(nextHistory);
-    setCurrentMove(nextHistory.length - 1);
+    setTimeout(() => {
+      const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+      setHistory(nextHistory);
+      setCurrentMove(nextHistory.length - 1);
+    }, delay - delay - 100);
   }
 
   function refresh() {
     setCurrentMove(0);
-    console.log(firstMove);
-
-    setTimeout(() => {
-      setClicked(false);
-      setAnimationDelay(false);
-    }, delay);
-
+    setClicked(false);
     return false;
   }
 
@@ -115,6 +110,11 @@ export default function Game() {
   }
 
   useEffect(() => {
+    if (!playerIsNext && !winner.status) {
+      setTimeout(() => {
+        handlePlay(botPlay(currentSquares, computer));
+      }, delay);
+    }
     setStatus(`Next player: ${playerIsNext ? player : computer}`);
     if (winner.status && winner.message != "draw") {
       const line = winner.line.line[0];
@@ -132,7 +132,7 @@ export default function Game() {
       }
       setTimeout(() => {
         setAnimationDelay(false);
-      }, delay);
+      }, 1050);
     } else {
       setWinLineStyle("");
     }
@@ -140,18 +140,15 @@ export default function Game() {
       setStatus("Draw");
       const newScore = score.draw + 1;
       setScore({ ...score, draw: newScore });
+      setTimeout(() => {
+        setAnimationDelay(false);
+      }, 500);
     }
 
-    return () => {};
-  }, [currentMove]);
-
-  if (!playerIsNext && !winner.status) {
-    // setBotIsPlay(true);
-    setTimeout(() => {
-      handlePlay(botPlay(currentSquares, computer));
-    }, 600);
-    clearTimeout();
-  }
+    return () => {
+      setAnimationDelay(true);
+    };
+  }, [currentMove, firstMove]);
 
   return (
     <>
@@ -165,7 +162,7 @@ export default function Game() {
           onClick={
             !animationDelay && winner.status && currentMove > 0
               ? refresh
-              : () => false
+              : false
           }
         >
           <Board
