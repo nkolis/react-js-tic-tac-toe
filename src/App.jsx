@@ -19,17 +19,27 @@ function Square({ onSquareClick, value }) {
 function Board({
   playerIsNext,
   player,
+  player2,
   squares,
   onPlay,
   winner,
   winLineStyle,
+  numsPlayer,
 }) {
   function handleClick(i) {
-    if (squares[i] || winner.status) return false;
+    if (squares[i] || winner.status || numsPlayer == 2) return false;
 
     let nextSquares = squares.slice();
-    if (playerIsNext) {
-      nextSquares[i] = player;
+
+    if (numsPlayer == 0) {
+      if (playerIsNext) {
+        nextSquares[i] = player;
+        onPlay(nextSquares);
+      }
+    }
+
+    if (numsPlayer == 1) {
+      nextSquares[i] = playerIsNext ? player : player2;
       onPlay(nextSquares);
     }
   }
@@ -38,11 +48,7 @@ function Board({
     <>
       <div className={`board ${winLineStyle}`}>
         {squares.map((val, i) => (
-          <Square
-            key={i}
-            onSquareClick={playerIsNext ? () => handleClick(i) : () => false}
-            value={val}
-          />
+          <Square key={i} onSquareClick={() => handleClick(i)} value={val} />
         ))}
       </div>
     </>
@@ -63,12 +69,23 @@ export default function Game() {
   const [animationDelay, setAnimationDelay] = useState(true);
   const delay = 600;
   const [clicked, setClicked] = useState(false);
+  const [difficulty, setDifficulty] = useState("Hard");
+  const [numsPlayer, setNumsPlayer] = useState(0);
+  const numsPlayerStr = ["1P", "2P", "2Bot"];
 
   const [score, setScore] = useState({
     player: 0,
     draw: 0,
     computer: 0,
   });
+
+  function handleNumsPlayer() {
+    if (numsPlayer > 1) {
+      setNumsPlayer(0);
+    } else {
+      setNumsPlayer((n) => n + 1);
+    }
+  }
 
   function handlePlay(nextSquares) {
     setTimeout(() => {
@@ -89,12 +106,13 @@ export default function Game() {
     setHistory([Array(9).fill(null)]);
     setCurrentMove(0);
     setFirstMove(0);
+    setNumsPlayer(0);
+    setDifficulty("Hard");
     setScore({
       player: 0,
       draw: 0,
       computer: 0,
     });
-    return false;
   }
 
   function swapPlayer() {
@@ -109,12 +127,41 @@ export default function Game() {
     }, 1000);
   }
 
-  useEffect(() => {
-    if (!playerIsNext && !winner.status) {
-      setTimeout(() => {
-        handlePlay(botPlay(currentSquares, computer));
-      }, delay);
+  function toggleDifficulty() {
+    difficulty == "Hard" ? setDifficulty("Easy") : setDifficulty("Hard");
+  }
+
+  function startBotPlay(numsBot = 1) {
+    if (numsBot == 1 || numsBot == 2) {
+      if (!playerIsNext && !winner.status) {
+        setTimeout(() => {
+          handlePlay(botPlay(currentSquares, computer, difficulty));
+        }, delay);
+      }
     }
+
+    if (numsBot == 2) {
+      if (playerIsNext && !winner.status) {
+        setTimeout(() => {
+          handlePlay(botPlay(currentSquares, player, difficulty));
+        }, delay);
+      }
+      setTimeout(() => {
+        if (winner.status) {
+          refresh();
+        }
+      }, delay * 2);
+    }
+  }
+
+  useEffect(() => {
+    if (numsPlayer == 0) {
+      startBotPlay();
+    }
+    if (numsPlayer == 2) {
+      startBotPlay(2);
+    }
+
     setStatus(`Next player: ${playerIsNext ? player : computer}`);
     if (winner.status && winner.message != "draw") {
       const line = winner.line.line[0];
@@ -148,7 +195,7 @@ export default function Game() {
     return () => {
       setAnimationDelay(true);
     };
-  }, [currentMove, firstMove]);
+  }, [currentMove, firstMove, numsPlayer]);
 
   return (
     <>
@@ -162,16 +209,18 @@ export default function Game() {
           onClick={
             !animationDelay && winner.status && currentMove > 0
               ? refresh
-              : false
+              : () => false
           }
         >
           <Board
             playerIsNext={playerIsNext}
             player={player}
+            player2={computer}
             squares={currentSquares}
-            onPlay={playerIsNext ? handlePlay : () => false}
+            onPlay={handlePlay}
             winner={winner}
             winLineStyle={winLineStyle}
+            numsPlayer={numsPlayer}
           />
         </div>
         <div className="game-info">
@@ -185,13 +234,27 @@ export default function Game() {
           </div>
           <div className="game-score">
             <div
+              className="difficult"
+              style={{ order: 1 }}
+              onClick={currentMove < 1 ? toggleDifficulty : () => false}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="1em"
+                viewBox="0 0 320 512"
+              >
+                <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z" />
+              </svg>
+              <span>{difficulty}</span>
+            </div>
+            <div
               className="score-info"
-              style={{ order: firstMove == 0 ? 1 : 3 }}
+              style={{ order: firstMove == 0 ? 2 : 4 }}
             >
               <p className="name">Player</p>
               <p className="score">{score.player}</p>
             </div>
-            <div className="score-info" style={{ order: 2 }}>
+            <div className="score-info" style={{ order: 3 }}>
               {history.length == 1 ? (
                 <button
                   className="swap-player"
@@ -215,10 +278,24 @@ export default function Game() {
             </div>
             <div
               className="score-info"
-              style={{ order: firstMove == 1 ? 1 : 3 }}
+              style={{ order: firstMove == 1 ? 2 : 4 }}
             >
               <p className="name">Computer</p>
               <p className="score">{score.computer}</p>
+            </div>
+            <div
+              style={{ order: 5 }}
+              className="player"
+              onClick={currentMove < 1 ? handleNumsPlayer : () => false}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="1em"
+                viewBox="0 0 320 512"
+              >
+                <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z" />
+              </svg>
+              <span>{numsPlayerStr[numsPlayer]}</span>
             </div>
           </div>
         </div>
@@ -227,7 +304,7 @@ export default function Game() {
   );
 }
 
-function botPlay(currentSquares, char, difficulty = "hard") {
+function botPlay(currentSquares, char, difficulty = "Hard") {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -240,83 +317,98 @@ function botPlay(currentSquares, char, difficulty = "hard") {
   ];
   const squares = currentSquares.slice();
   // to choose the winning square line
-  for (let line of lines) {
-    const [a, b, c] = line;
-    if (
-      squares[a] != null &&
-      squares[a] == char &&
-      squares[c] == char &&
-      squares[b] == null
-    ) {
-      squares[b] = char;
-      return squares;
-    }
-    if (
-      squares[a] != null &&
-      squares[a] == char &&
-      squares[b] == char &&
-      squares[c] == null
-    ) {
-      squares[c] = char;
-      return squares;
-    }
-    if (
-      squares[c] != null &&
-      squares[c] == char &&
-      squares[b] == char &&
-      squares[a] == null
-    ) {
-      squares[a] = char;
-      return squares;
-    }
-  }
 
-  // to intercept the oppenent win
-  for (let line of lines) {
-    const [a, b, c] = line;
-    if (squares[a] != null && squares[a] == squares[c] && squares[b] == null) {
-      squares[b] = char;
-      return squares;
+  if (difficulty == "Hard") {
+    for (let line of lines) {
+      const [a, b, c] = line;
+      if (
+        squares[a] != null &&
+        squares[a] == char &&
+        squares[c] == char &&
+        squares[b] == null
+      ) {
+        squares[b] = char;
+        return squares;
+      }
+      if (
+        squares[a] != null &&
+        squares[a] == char &&
+        squares[b] == char &&
+        squares[c] == null
+      ) {
+        squares[c] = char;
+        return squares;
+      }
+      if (
+        squares[c] != null &&
+        squares[c] == char &&
+        squares[b] == char &&
+        squares[a] == null
+      ) {
+        squares[a] = char;
+        return squares;
+      }
     }
-    if (squares[a] != null && squares[a] == squares[b] && squares[c] == null) {
-      squares[c] = char;
-      return squares;
-    }
-    if (squares[c] != null && squares[c] == squares[b] && squares[a] == null) {
-      squares[a] = char;
-      return squares;
-    }
-  }
 
-  //to create a win probability line
-  for (let line of lines) {
-    const [a, b, c] = line;
-    if (squares[a] == char && squares[b] == null && squares[c] == null) {
-      const rand = Math.floor(Math.random() * 2);
-      if (rand == 0) {
+    // to intercept the oppenent win
+    for (let line of lines) {
+      const [a, b, c] = line;
+      if (
+        squares[a] != null &&
+        squares[a] == squares[c] &&
+        squares[b] == null
+      ) {
         squares[b] = char;
-      } else {
+        return squares;
+      }
+      if (
+        squares[a] != null &&
+        squares[a] == squares[b] &&
+        squares[c] == null
+      ) {
         squares[c] = char;
+        return squares;
       }
-      return squares;
-    }
-    if (squares[a] == null && squares[b] == char && squares[c] == null) {
-      const rand = Math.floor(Math.random() * 2);
-      if (rand == 0) {
+      if (
+        squares[c] != null &&
+        squares[c] == squares[b] &&
+        squares[a] == null
+      ) {
         squares[a] = char;
-      } else {
-        squares[c] = char;
+        return squares;
       }
-      return squares;
     }
-    if (squares[a] == null && squares[b] == null && squares[c] == char) {
-      const rand = Math.floor(Math.random() * 2);
-      if (rand == 0) {
-        squares[a] = char;
-      } else {
-        squares[b] = char;
+
+    //to create a win probability line
+    for (let line of lines) {
+      const [a, b, c] = line;
+      if (squares[a] == char && squares[b] == null && squares[c] == null) {
+        const rand = Math.floor(Math.random() * 2);
+        if (rand == 0) {
+          squares[b] = char;
+        } else {
+          squares[c] = char;
+        }
+        return squares;
       }
-      return squares;
+      if (squares[a] == null && squares[b] == char && squares[c] == null) {
+        const rand = Math.floor(Math.random() * 2);
+        if (rand == 0) {
+          squares[a] = char;
+        } else {
+          squares[c] = char;
+        }
+        return squares;
+      }
+      if (squares[a] == null && squares[b] == null && squares[c] == char) {
+        const rand = Math.floor(Math.random() * 2);
+        if (rand == 0) {
+          squares[a] = char;
+        } else {
+          squares[b] = char;
+        }
+        return squares;
+      }
     }
   }
 

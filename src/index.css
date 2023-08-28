@@ -4,7 +4,7 @@
   :root {
     --shape-size: 60px;
     --shape-color-o: rgb(0, 156, 218);
-    --shape-color-x: rgb(202, 75, 60);
+    --shape-color-x: rgb(177, 56, 52);
     --square-size: 100px;
   }
 
@@ -227,7 +227,15 @@
   .game-score {
     display: grid;
     gap: 10px;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 0.2fr 0.6fr 0.2fr 0.6fr 0.2fr;
+  }
+
+  .difficult,
+  .player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .score-info {
