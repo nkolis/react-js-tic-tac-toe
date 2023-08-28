@@ -2,6 +2,7 @@
 
 
   :root {
+    --board-color: rgb(115, 142, 146);
     --shape-size: 60px;
     --shape-color-o: rgb(0, 156, 218);
     --shape-color-x: rgb(177, 56, 52);
@@ -72,7 +73,7 @@
 
   .board {
     position: relative;
-    background-color: rgb(115, 142, 146);
+    background-color: var(--board-color);
     display: grid;
     grid-template-columns: repeat(3, max-content);
     gap: 6px;
@@ -191,6 +192,18 @@
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: xor;
+    background-image: conic-gradient(transparent 0%, var(--shape-color-o) 0%);
+  }
+
+  .shape-o::after {
+    /* transform: scale(0.3); */
+    display: block;
+    position: absolute;
+    content: '';
+    width: inherit;
+    height: inherit;
+    background-color: #fff;
+    border-radius: 50%;
   }
 
   .shape-x {
@@ -215,11 +228,13 @@
   }
 
   .game-info {
+    margin-top: 20px;
     position: relative;
     display: flex;
     flex-direction: column;
     justify-items: center;
     justify-content: center;
+    color: var(--board-color);
     /* display: grid;
     grid-template-columns: repeat(1fr); */
   }
@@ -228,6 +243,10 @@
     display: grid;
     gap: 10px;
     grid-template-columns: 0.2fr 0.6fr 0.2fr 0.6fr 0.2fr;
+  }
+
+  .score {
+    font-weight: bolder;
   }
 
   .difficult,
@@ -245,6 +264,11 @@
     justify-content: center;
   }
 
+  .score-info .name {
+    display: flex;
+    align-items: center;
+  }
+
   .swap-player {
     /* display: block; */
     height: 100%;
@@ -256,6 +280,7 @@
     border: 0;
     outline: none;
     background-color: transparent;
+    color: var(--board-color);
   }
 
 

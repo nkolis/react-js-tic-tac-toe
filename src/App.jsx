@@ -60,7 +60,6 @@ export default function Game() {
   const [currentMove, setCurrentMove] = useState(0);
   const [player, setPlayer] = useState("o");
   const [computer, setComputer] = useState("x");
-  const [status, setStatus] = useState("");
   const [firstMove, setFirstMove] = useState(0);
   const playerIsNext = currentMove % 2 == firstMove;
   const currentSquares = history[currentMove];
@@ -72,14 +71,32 @@ export default function Game() {
   const [difficulty, setDifficulty] = useState("Hard");
   const [numsPlayer, setNumsPlayer] = useState(0);
   const numsPlayerStr = ["1P", "2P", "2Bot"];
-
+  const [status, setStatus] = useState("");
   const [score, setScore] = useState({
     player: 0,
     draw: 0,
     computer: 0,
   });
 
+  const oStyle = {
+    width: 7,
+    height: 7,
+    padding: 3,
+    animation: "unset",
+  };
+  const xStyle = {
+    width: 14,
+    height: 3,
+    animation: "unset",
+  };
+
+  const smallCharPlayer1 =
+    player == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
+  const smallCharPlayer2 =
+    computer == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
+
   function handleNumsPlayer() {
+    restart();
     if (numsPlayer > 1) {
       setNumsPlayer(0);
     } else {
@@ -95,18 +112,27 @@ export default function Game() {
     }, delay - delay - 100);
   }
 
+  function clearAllTimer() {
+    const highestTimeoutId = setTimeout(";");
+    for (var i = 0; i < highestTimeoutId; i++) {
+      clearTimeout(i);
+    }
+  }
+
   function refresh() {
+    clearAllTimer();
     setCurrentMove(0);
     setClicked(false);
     return false;
   }
 
   function restart() {
+    clearAllTimer();
     setClicked(false);
     setHistory([Array(9).fill(null)]);
     setCurrentMove(0);
     setFirstMove(0);
-    setNumsPlayer(0);
+    // setNumsPlayer(0);
     setDifficulty("Hard");
     setScore({
       player: 0,
@@ -116,39 +142,40 @@ export default function Game() {
   }
 
   function swapPlayer() {
+    clearAllTimer();
     if (!clicked) {
-      restart();
       firstMove == 0 ? setFirstMove(1) : setFirstMove(0);
       setClicked(true);
     }
 
-    setTimeout(() => {
-      setClicked(false);
-    }, 1000);
+    setClicked(false);
   }
 
   function toggleDifficulty() {
     difficulty == "Hard" ? setDifficulty("Easy") : setDifficulty("Hard");
   }
 
-  function startBotPlay(numsBot = 1) {
+  function startBotPlay(numsBot) {
     if (numsBot == 1 || numsBot == 2) {
       if (!playerIsNext && !winner.status) {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           handlePlay(botPlay(currentSquares, computer, difficulty));
+          clearTimeout(timer);
         }, delay);
       }
     }
 
     if (numsBot == 2) {
       if (playerIsNext && !winner.status) {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           handlePlay(botPlay(currentSquares, player, difficulty));
+          clearTimeout(timer);
         }, delay);
       }
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         if (winner.status) {
           refresh();
+          clearTimeout(timer);
         }
       }, delay * 2);
     }
@@ -156,19 +183,49 @@ export default function Game() {
 
   useEffect(() => {
     if (numsPlayer == 0) {
-      startBotPlay();
+      startBotPlay(1);
     }
     if (numsPlayer == 2) {
       startBotPlay(2);
     }
 
-    setStatus(`Next player: ${playerIsNext ? player : computer}`);
+    setStatus(
+      <p
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span style={{ top: -2, position: "relative", right: 4 }}>
+          Next player:
+        </span>
+        {playerIsNext ? smallCharPlayer1 : smallCharPlayer2}
+      </p>
+    );
     if (winner.status && winner.message != "draw") {
       const line = winner.line.line[0];
       setWinLineStyle(
         `win-line-${currentSquares[line]}-${winner.line.position}`
       );
-      setStatus("Winner: " + winner.message.toUpperCase());
+      setStatus(
+        <p
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <span style={{ top: -2, position: "relative", right: 4 }}>
+            Winner:
+          </span>
+          {winner.message == "x" ? (
+            <X_shape style={xStyle} />
+          ) : (
+            <O_shape style={oStyle} />
+          )}
+        </p>
+      );
       if (winner.message == player) {
         const newScore = score.player + 1;
         setScore({ ...score, player: newScore });
@@ -223,35 +280,37 @@ export default function Game() {
             numsPlayer={numsPlayer}
           />
         </div>
+
         <div className="game-info">
-          <div className="game-reset">
-            <button
-              onClick={restart}
-              disabled={history.length == 1 ? true : false}
-            >
-              Restart Game
-            </button>
-          </div>
           <div className="game-score">
             <div
               className="difficult"
               style={{ order: 1 }}
-              onClick={currentMove < 1 ? toggleDifficulty : () => false}
+              onClick={toggleDifficulty}
             >
               <svg
+                fill="currentColor"
                 xmlns="http://www.w3.org/2000/svg"
                 height="1em"
                 viewBox="0 0 320 512"
               >
                 <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z" />
               </svg>
-              <span>{difficulty}</span>
+              {numsPlayer != 1 && <span>{difficulty}</span>}
             </div>
             <div
               className="score-info"
               style={{ order: firstMove == 0 ? 2 : 4 }}
             >
-              <p className="name">Player</p>
+              <p className="name">
+                {numsPlayer == 2 ? <BotIcon /> : <UserIcon />}(
+                {player == "o" ? (
+                  <O_shape style={oStyle} />
+                ) : (
+                  <X_shape style={xStyle} />
+                )}
+                )
+              </p>
               <p className="score">{score.player}</p>
             </div>
             <div className="score-info" style={{ order: 3 }}>
@@ -262,6 +321,7 @@ export default function Game() {
                   disabled={clicked}
                 >
                   <svg
+                    fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
                     height="1em"
                     viewBox="0 0 512 512"
@@ -280,15 +340,24 @@ export default function Game() {
               className="score-info"
               style={{ order: firstMove == 1 ? 2 : 4 }}
             >
-              <p className="name">Computer</p>
+              <p className="name">
+                {numsPlayer != 1 ? <BotIcon /> : <UserIcon />}(
+                {computer == "o" ? (
+                  <O_shape style={oStyle} />
+                ) : (
+                  <X_shape style={xStyle} />
+                )}
+                )
+              </p>
               <p className="score">{score.computer}</p>
             </div>
             <div
               style={{ order: 5 }}
               className="player"
-              onClick={currentMove < 1 ? handleNumsPlayer : () => false}
+              onClick={handleNumsPlayer}
             >
               <svg
+                fill="currentColor"
                 xmlns="http://www.w3.org/2000/svg"
                 height="1em"
                 viewBox="0 0 320 512"
@@ -301,6 +370,32 @@ export default function Game() {
         </div>
       </div>
     </>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      height="1em"
+      viewBox="0 0 448 512"
+    >
+      <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z" />
+    </svg>
+  );
+}
+
+function BotIcon() {
+  return (
+    <svg
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      height="1em"
+      viewBox="0 0 640 512"
+    >
+      <path d="M320 0c17.7 0 32 14.3 32 32V96H472c39.8 0 72 32.2 72 72V440c0 39.8-32.2 72-72 72H168c-39.8 0-72-32.2-72-72V168c0-39.8 32.2-72 72-72H288V32c0-17.7 14.3-32 32-32zM208 384c-8.8 0-16 7.2-16 16s7.2 16 16 16h32c8.8 0 16-7.2 16-16s-7.2-16-16-16H208zm96 0c-8.8 0-16 7.2-16 16s7.2 16 16 16h32c8.8 0 16-7.2 16-16s-7.2-16-16-16H304zm96 0c-8.8 0-16 7.2-16 16s7.2 16 16 16h32c8.8 0 16-7.2 16-16s-7.2-16-16-16H400zM264 256a40 40 0 1 0 -80 0 40 40 0 1 0 80 0zm152 40a40 40 0 1 0 0-80 40 40 0 1 0 0 80zM48 224H64V416H48c-26.5 0-48-21.5-48-48V272c0-26.5 21.5-48 48-48zm544 0c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H576V224h16z" />
+    </svg>
   );
 }
 
