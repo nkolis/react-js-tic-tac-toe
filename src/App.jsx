@@ -66,7 +66,7 @@ export default function Game() {
   const player1IsNext = currentMove % 2 == firstMove;
   const currentSquares = history[currentMove];
   const [winLineStyle, setWinLineStyle] = useState("");
-  const delay = 350;
+  const delay = 400;
   const [clicked, setClicked] = useState(false);
   const [difficulty, setDifficulty] = useState("Hard");
   const [numPlayers, setnumPlayers] = useState(0);
