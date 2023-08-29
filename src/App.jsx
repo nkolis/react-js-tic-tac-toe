@@ -2,7 +2,11 @@
 import { useState, useEffect } from "react";
 import O_shape from "./components/O_shape";
 import X_shape from "./components/X_shape";
+import MenuSound from "./assets/sounds/interface-click.wav";
+import CharSound from "./assets/sounds/o-click.wav";
 
+const menuClick = new Audio(MenuSound);
+const charClick = new Audio(CharSound);
 function Square({ onSquareClick, value }) {
   function handleClicked() {
     return onSquareClick();
@@ -24,21 +28,21 @@ function Board({
   onPlay,
   winner,
   winLineStyle,
-  numsPlayer,
+  numPlayers,
 }) {
   function handleClick(i) {
-    if (squares[i] || winner.status || numsPlayer == 2) return false;
+    if (squares[i] || winner.status || numPlayers == 2) return false;
 
     let nextSquares = squares.slice();
 
-    if (numsPlayer == 0) {
+    if (numPlayers == 0) {
       if (playerIsNext) {
         nextSquares[i] = player;
         onPlay(nextSquares);
       }
     }
 
-    if (numsPlayer == 1) {
+    if (numPlayers == 1) {
       nextSquares[i] = playerIsNext ? player : player2;
       onPlay(nextSquares);
     }
@@ -69,20 +73,22 @@ export default function Game() {
   const delay = 600;
   const [clicked, setClicked] = useState(false);
   const [difficulty, setDifficulty] = useState("Hard");
-  const [numsPlayer, setNumsPlayer] = useState(0);
-  const numsPlayerStr = ["1P", "2P", "2Bot"];
+  const [numPlayers, setnumPlayers] = useState(0);
+  const numPlayersStr = ["1P", "2P", "2Bot"];
   const [status, setStatus] = useState("");
   const [score, setScore] = useState({
     player: 0,
     draw: 0,
     computer: 0,
   });
+  const [sound, setSound] = useState("off");
 
   const oStyle = {
     width: 7,
     height: 7,
     padding: 3,
     animation: "unset",
+    backgroundColor: "var(--shape-color-o)",
   };
   const xStyle = {
     width: 14,
@@ -95,18 +101,24 @@ export default function Game() {
   const smallCharPlayer2 =
     computer == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
 
-  function handleNumsPlayer() {
+  function handlenumPlayers() {
+    if (sound == "on") {
+      menuClick.play();
+    }
     restart();
-    if (numsPlayer > 1) {
-      setNumsPlayer(0);
+    if (numPlayers > 1) {
+      setnumPlayers(0);
     } else {
-      setNumsPlayer((n) => n + 1);
+      setnumPlayers((n) => n + 1);
     }
   }
 
   function handlePlay(nextSquares) {
     setTimeout(() => {
       const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+      if (sound == "on") {
+        charClick.play();
+      }
       setHistory(nextHistory);
       setCurrentMove(nextHistory.length - 1);
     }, delay - delay - 100);
@@ -132,7 +144,7 @@ export default function Game() {
     setHistory([Array(9).fill(null)]);
     setCurrentMove(0);
     setFirstMove(0);
-    // setNumsPlayer(0);
+    // setnumPlayers(0);
     setDifficulty("Hard");
     setScore({
       player: 0,
@@ -142,6 +154,9 @@ export default function Game() {
   }
 
   function swapPlayer() {
+    if (sound == "on") {
+      menuClick.play();
+    }
     clearAllTimer();
     if (!clicked) {
       firstMove == 0 ? setFirstMove(1) : setFirstMove(0);
@@ -152,11 +167,21 @@ export default function Game() {
   }
 
   function toggleDifficulty() {
+    if (sound == "on") {
+      menuClick.play();
+    }
     difficulty == "Hard" ? setDifficulty("Easy") : setDifficulty("Hard");
   }
 
-  function startBotPlay(numsBot) {
-    if (numsBot == 1 || numsBot == 2) {
+  function toggleSound() {
+    if (sound == "off") {
+      menuClick.play();
+    }
+    sound == "on" ? setSound("off") : setSound("on");
+  }
+
+  function startBotPlay(numBots) {
+    if (numBots == 1 || numBots == 2) {
       if (!playerIsNext && !winner.status) {
         const timer = setTimeout(() => {
           handlePlay(botPlay(currentSquares, computer, difficulty));
@@ -165,7 +190,7 @@ export default function Game() {
       }
     }
 
-    if (numsBot == 2) {
+    if (numBots == 2) {
       if (playerIsNext && !winner.status) {
         const timer = setTimeout(() => {
           handlePlay(botPlay(currentSquares, player, difficulty));
@@ -182,10 +207,10 @@ export default function Game() {
   }
 
   useEffect(() => {
-    if (numsPlayer == 0) {
+    if (numPlayers == 0) {
       startBotPlay(1);
     }
-    if (numsPlayer == 2) {
+    if (numPlayers == 2) {
       startBotPlay(2);
     }
 
@@ -197,10 +222,8 @@ export default function Game() {
           justifyContent: "center",
         }}
       >
-        <span style={{ top: -2, position: "relative", right: 4 }}>
-          Next player:
-        </span>
         {playerIsNext ? smallCharPlayer1 : smallCharPlayer2}
+        <span style={{ position: "relative", left: 4 }}>Turn</span>
       </p>
     );
     if (winner.status && winner.message != "draw") {
@@ -216,9 +239,7 @@ export default function Game() {
             justifyContent: "center",
           }}
         >
-          <span style={{ top: -2, position: "relative", right: 4 }}>
-            Winner:
-          </span>
+          <span style={{ position: "relative", right: 4 }}>Winner</span>
           {winner.message == "x" ? (
             <X_shape style={xStyle} />
           ) : (
@@ -252,10 +273,31 @@ export default function Game() {
     return () => {
       setAnimationDelay(true);
     };
-  }, [currentMove, firstMove, numsPlayer]);
+  }, [currentMove, firstMove, numPlayers]);
 
   return (
     <>
+      <button className="game-sound" onClick={toggleSound}>
+        {sound == "off" ? (
+          <svg
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+            height="1em"
+            viewBox="0 0 576 512"
+          >
+            <path d="M301.1 34.8C312.6 40 320 51.4 320 64V448c0 12.6-7.4 24-18.9 29.2s-25 3.1-34.4-5.3L131.8 352H64c-35.3 0-64-28.7-64-64V224c0-35.3 28.7-64 64-64h67.8L266.7 40.1c9.4-8.4 22.9-10.4 34.4-5.3zM425 167l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0z" />
+          </svg>
+        ) : (
+          <svg
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+            height="1em"
+            viewBox="0 0 448 512"
+          >
+            <path d="M301.1 34.8C312.6 40 320 51.4 320 64V448c0 12.6-7.4 24-18.9 29.2s-25 3.1-34.4-5.3L131.8 352H64c-35.3 0-64-28.7-64-64V224c0-35.3 28.7-64 64-64h67.8L266.7 40.1c9.4-8.4 22.9-10.4 34.4-5.3zM412.6 181.5C434.1 199.1 448 225.9 448 256s-13.9 56.9-35.4 74.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C393.1 284.4 400 271 400 256s-6.9-28.4-17.7-37.3c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5z" />
+          </svg>
+        )}
+      </button>
       <div className="header">
         <h1 className="game-title">Tic Tac Toe</h1>
         <h4 className="game-status">{status}</h4>
@@ -277,7 +319,7 @@ export default function Game() {
             onPlay={handlePlay}
             winner={winner}
             winLineStyle={winLineStyle}
-            numsPlayer={numsPlayer}
+            numPlayers={numPlayers}
           />
         </div>
 
@@ -296,14 +338,14 @@ export default function Game() {
               >
                 <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z" />
               </svg>
-              {numsPlayer != 1 && <span>{difficulty}</span>}
+              {numPlayers != 1 && <span>{difficulty}</span>}
             </div>
             <div
               className="score-info"
               style={{ order: firstMove == 0 ? 2 : 4 }}
             >
               <p className="name">
-                {numsPlayer == 2 ? <BotIcon /> : <UserIcon />}(
+                {numPlayers == 2 ? <BotIcon /> : <UserIcon />}(
                 {player == "o" ? (
                   <O_shape style={oStyle} />
                 ) : (
@@ -341,7 +383,7 @@ export default function Game() {
               style={{ order: firstMove == 1 ? 2 : 4 }}
             >
               <p className="name">
-                {numsPlayer != 1 ? <BotIcon /> : <UserIcon />}(
+                {numPlayers != 1 ? <BotIcon /> : <UserIcon />}(
                 {computer == "o" ? (
                   <O_shape style={oStyle} />
                 ) : (
@@ -354,7 +396,7 @@ export default function Game() {
             <div
               style={{ order: 5 }}
               className="player"
-              onClick={handleNumsPlayer}
+              onClick={handlenumPlayers}
             >
               <svg
                 fill="currentColor"
@@ -364,10 +406,13 @@ export default function Game() {
               >
                 <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z" />
               </svg>
-              <span>{numsPlayerStr[numsPlayer]}</span>
+              <span>{numPlayersStr[numPlayers]}</span>
             </div>
           </div>
         </div>
+      </div>
+      <div className="footer">
+        <p>Created using ReactJS by Nkholis &copy; 2023</p>
       </div>
     </>
   );

@@ -2,10 +2,11 @@
 
 
   :root {
-    --board-color: rgb(115, 142, 146);
+    --bg-color: #1f1e1e;
+    --board-color: #b8b7af;
     --shape-size: 60px;
-    --shape-color-o: rgb(0, 156, 218);
-    --shape-color-x: rgb(177, 56, 52);
+    --shape-color-x: #f0c742;
+    --shape-color-o: rgb(61, 207, 134);
     --square-size: 100px;
   }
 
@@ -30,16 +31,22 @@
     font-weight: 400;
   }
 
+  body,
+  .square {
+    background-color: var(--bg-color);
+  }
+
 
   #root {
     max-width: 1280px;
-    margin: 0 auto;
+    margin: 15px auto;
     text-align: center;
   }
 
   .header,
   game {
     padding: 0;
+    color: var(--board-color);
   }
 
   .header .game-status {
@@ -164,7 +171,7 @@
     position: relative;
     width: 100px;
     height: 100px;
-    background-color: #ffffff;
+    /* background-color: #ffffff; */
     outline: none;
     border: none;
     display: flex;
@@ -188,11 +195,11 @@
     height: calc(var(--shape-size) - var(--padding-size) / 0.4);
     border-radius: 50%;
     padding: var(--padding-size);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    /* -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: xor;
-    background-image: conic-gradient(transparent 0%, var(--shape-color-o) 0%);
+    background-image: conic-gradient(transparent 0%, var(--shape-color-o) 0%); */
   }
 
   .shape-o::after {
@@ -202,8 +209,8 @@
     content: '';
     width: inherit;
     height: inherit;
-    background-color: #fff;
-    border-radius: 50%;
+    background-color: var(--bg-color);
+    border-radius: inherit;
   }
 
   .shape-x {
@@ -281,6 +288,34 @@
     outline: none;
     background-color: transparent;
     color: var(--board-color);
+  }
+
+  .game-sound {
+    top: 25px;
+    position: absolute;
+    right: 25px;
+    border: 0;
+    outline: none;
+    background-color: transparent;
+    color: var(--board-color);
+  }
+
+  .game-sound svg {
+    transform: scale(1.4);
+  }
+
+  .footer {
+    width: calc(var(--square-size) * 3 + 6px);
+    border-top: 1px solid #4b4848;
+    position: absolute;
+    bottom: 0;
+  }
+
+  .footer p {
+    font-size: 0.8em;
+    text-align: center;
+    padding: 7px 0;
+    color: #979797;
   }
 
 
