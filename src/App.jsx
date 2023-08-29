@@ -129,7 +129,7 @@ export default function Game() {
       clearAllTimer();
       setCurrentMove(0);
       setClicked(false);
-    }, delay * 2);
+    }, delay + 100);
   }
 
   function restart() {
