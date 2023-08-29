@@ -22,7 +22,7 @@ function Square({ onSquareClick, value }) {
 
 function Board({
   playerIsNext,
-  player,
+  player1,
   player2,
   squares,
   onPlay,
@@ -33,17 +33,15 @@ function Board({
   function handleClick(i) {
     if (squares[i] || winner.status || numPlayers == 2) return false;
 
-    let nextSquares = squares.slice();
+    const nextSquares = squares.slice();
 
-    if (numPlayers == 0) {
-      if (playerIsNext) {
-        nextSquares[i] = player;
-        onPlay(nextSquares);
-      }
+    if (numPlayers === 0 && playerIsNext) {
+      nextSquares[i] = player1;
+      onPlay(nextSquares);
     }
 
     if (numPlayers == 1) {
-      nextSquares[i] = playerIsNext ? player : player2;
+      nextSquares[i] = playerIsNext ? player1 : player2;
       onPlay(nextSquares);
     }
   }
@@ -62,24 +60,23 @@ function Board({
 export default function Game() {
   const [history, setHistory] = useState([Array(9).fill(null)]);
   const [currentMove, setCurrentMove] = useState(0);
-  const [player, setPlayer] = useState("o");
-  const [computer, setComputer] = useState("x");
+  let player1 = "o";
+  let player2 = "x";
   const [firstMove, setFirstMove] = useState(0);
-  const playerIsNext = currentMove % 2 == firstMove;
+  const player1IsNext = currentMove % 2 == firstMove;
   const currentSquares = history[currentMove];
-  const winner = calculateWinner(currentSquares);
   const [winLineStyle, setWinLineStyle] = useState("");
-  const [animationDelay, setAnimationDelay] = useState(true);
-  const delay = 600;
+  const delay = 350;
   const [clicked, setClicked] = useState(false);
   const [difficulty, setDifficulty] = useState("Hard");
   const [numPlayers, setnumPlayers] = useState(0);
   const numPlayersStr = ["1P", "2P", "2Bot"];
   const [status, setStatus] = useState("");
+  const winner = calculateWinner(currentSquares);
   const [score, setScore] = useState({
-    player: 0,
+    player1: 0,
     draw: 0,
-    computer: 0,
+    player2: 0,
   });
   const [sound, setSound] = useState("off");
 
@@ -97,28 +94,24 @@ export default function Game() {
   };
 
   const smallCharPlayer1 =
-    player == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
+    player1 == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
   const smallCharPlayer2 =
-    computer == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
+    player2 == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
 
   function handlenumPlayers() {
     if (sound == "on") {
       menuClick.play();
     }
     restart();
-    if (numPlayers > 1) {
-      setnumPlayers(0);
-    } else {
-      setnumPlayers((n) => n + 1);
-    }
+    numPlayers > 1 ? setnumPlayers(0) : setnumPlayers((n) => n + 1);
   }
 
   function handlePlay(nextSquares) {
     setTimeout(() => {
-      const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
       if (sound == "on") {
         charClick.play();
       }
+      const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
       setHistory(nextHistory);
       setCurrentMove(nextHistory.length - 1);
     }, delay - delay - 100);
@@ -132,10 +125,11 @@ export default function Game() {
   }
 
   function refresh() {
-    clearAllTimer();
-    setCurrentMove(0);
-    setClicked(false);
-    return false;
+    setTimeout(() => {
+      clearAllTimer();
+      setCurrentMove(0);
+      setClicked(false);
+    }, delay * 2);
   }
 
   function restart() {
@@ -144,12 +138,11 @@ export default function Game() {
     setHistory([Array(9).fill(null)]);
     setCurrentMove(0);
     setFirstMove(0);
-    // setnumPlayers(0);
     setDifficulty("Hard");
     setScore({
-      player: 0,
+      player1: 0,
       draw: 0,
-      computer: 0,
+      player2: 0,
     });
   }
 
@@ -162,7 +155,6 @@ export default function Game() {
       firstMove == 0 ? setFirstMove(1) : setFirstMove(0);
       setClicked(true);
     }
-
     setClicked(false);
   }
 
@@ -180,51 +172,34 @@ export default function Game() {
     sound == "on" ? setSound("off") : setSound("on");
   }
 
-  function startBotPlay(numBots) {
-    if (numBots == 1 || numBots == 2) {
-      if (!playerIsNext && !winner.status) {
-        const timer = setTimeout(() => {
-          handlePlay(botPlay(currentSquares, computer, difficulty));
-          clearTimeout(timer);
-        }, delay);
-      }
+  function startBotPlay() {
+    if (numPlayers == 1) return false;
+    if (!player1IsNext && !winner.status) {
+      setTimeout(() => {
+        handlePlay(botPlay(currentSquares, player2, difficulty));
+      }, delay);
     }
 
-    if (numBots == 2) {
-      if (playerIsNext && !winner.status) {
-        const timer = setTimeout(() => {
-          handlePlay(botPlay(currentSquares, player, difficulty));
-          clearTimeout(timer);
-        }, delay);
-      }
-      const timer = setTimeout(() => {
-        if (winner.status) {
-          refresh();
-          clearTimeout(timer);
-        }
-      }, delay * 2);
+    if (numPlayers == 2 && player1IsNext && !winner.status) {
+      setTimeout(() => {
+        handlePlay(botPlay(currentSquares, player1, difficulty));
+      }, delay);
     }
+
+    setTimeout(() => {
+      if (winner.status) {
+        refresh();
+      }
+    }, delay * 2);
   }
 
   useEffect(() => {
-    if (numPlayers == 0) {
-      startBotPlay(1);
-    }
-    if (numPlayers == 2) {
-      startBotPlay(2);
-    }
-
+    startBotPlay();
     setStatus(
-      <p
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {playerIsNext ? smallCharPlayer1 : smallCharPlayer2}
+      <>
+        {player1IsNext ? smallCharPlayer1 : smallCharPlayer2}
         <span style={{ position: "relative", left: 4 }}>Turn</span>
-      </p>
+      </>
     );
     if (winner.status && winner.message != "draw") {
       const line = winner.line.line[0];
@@ -232,32 +207,18 @@ export default function Game() {
         `win-line-${currentSquares[line]}-${winner.line.position}`
       );
       setStatus(
-        <p
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <>
           <span style={{ position: "relative", right: 4 }}>Winner</span>
           {winner.message == "x" ? (
             <X_shape style={xStyle} />
           ) : (
             <O_shape style={oStyle} />
           )}
-        </p>
+        </>
       );
-      if (winner.message == player) {
-        const newScore = score.player + 1;
-        setScore({ ...score, player: newScore });
-      }
-      if (winner.message == computer) {
-        const newScore = score.computer + 1;
-        setScore({ ...score, computer: newScore });
-      }
-      setTimeout(() => {
-        setAnimationDelay(false);
-      }, 1050);
+      winner.message == player1
+        ? setScore({ ...score, player1: score.player1 + 1 })
+        : setScore({ ...score, player2: score.player2 + 1 });
     } else {
       setWinLineStyle("");
     }
@@ -265,14 +226,9 @@ export default function Game() {
       setStatus("Draw");
       const newScore = score.draw + 1;
       setScore({ ...score, draw: newScore });
-      setTimeout(() => {
-        setAnimationDelay(false);
-      }, 500);
     }
 
-    return () => {
-      setAnimationDelay(true);
-    };
+    return () => {};
   }, [currentMove, firstMove, numPlayers]);
 
   return (
@@ -305,16 +261,12 @@ export default function Game() {
       <div className="game">
         <div
           className="game-board"
-          onClick={
-            !animationDelay && winner.status && currentMove > 0
-              ? refresh
-              : () => false
-          }
+          onClick={winner.status && currentMove > 0 ? refresh : () => false}
         >
           <Board
-            playerIsNext={playerIsNext}
-            player={player}
-            player2={computer}
+            playerIsNext={player1IsNext}
+            player1={player1}
+            player2={player2}
             squares={currentSquares}
             onPlay={handlePlay}
             winner={winner}
@@ -346,14 +298,14 @@ export default function Game() {
             >
               <p className="name">
                 {numPlayers == 2 ? <BotIcon /> : <UserIcon />}(
-                {player == "o" ? (
+                {player1 == "o" ? (
                   <O_shape style={oStyle} />
                 ) : (
                   <X_shape style={xStyle} />
                 )}
                 )
               </p>
-              <p className="score">{score.player}</p>
+              <p className="score">{score.player1}</p>
             </div>
             <div className="score-info" style={{ order: 3 }}>
               {history.length == 1 ? (
@@ -384,14 +336,14 @@ export default function Game() {
             >
               <p className="name">
                 {numPlayers != 1 ? <BotIcon /> : <UserIcon />}(
-                {computer == "o" ? (
+                {player2 == "o" ? (
                   <O_shape style={oStyle} />
                 ) : (
                   <X_shape style={xStyle} />
                 )}
                 )
               </p>
-              <p className="score">{score.computer}</p>
+              <p className="score">{score.player2}</p>
             </div>
             <div
               style={{ order: 5 }}
