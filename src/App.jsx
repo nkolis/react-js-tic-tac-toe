@@ -72,6 +72,7 @@ export default function Game() {
   const [numPlayers, setnumPlayers] = useState(0);
   const numPlayersStr = ["1P", "2P", "2Bot"];
   const [status, setStatus] = useState("");
+  const [visibilityState, setVisibilityState] = useState(true);
   const winner = calculateWinner(currentSquares);
   const [score, setScore] = useState({
     player1: 0,
@@ -194,42 +195,48 @@ export default function Game() {
   }
 
   useEffect(() => {
-    startBotPlay();
-    setStatus(
-      <>
-        {player1IsNext ? smallCharPlayer1 : smallCharPlayer2}
-        <span style={{ position: "relative", left: 4 }}>Turn</span>
-      </>
-    );
-    if (winner.status && winner.message != "draw") {
-      const line = winner.line.line[0];
-      setWinLineStyle(
-        `win-line-${currentSquares[line]}-${winner.line.position}`
-      );
+    document.addEventListener("visibilitychange", () => {
+      setVisibilityState(document.visibilityState == "visible");
+    });
+    if (visibilityState) {
+      clearAllTimer();
+      startBotPlay();
       setStatus(
         <>
-          <span style={{ position: "relative", right: 4 }}>Winner</span>
-          {winner.message == "x" ? (
-            <X_shape style={xStyle} />
-          ) : (
-            <O_shape style={oStyle} />
-          )}
+          {player1IsNext ? smallCharPlayer1 : smallCharPlayer2}
+          <span style={{ position: "relative", left: 4 }}>Turn</span>
         </>
       );
-      winner.message == player1
-        ? setScore({ ...score, player1: score.player1 + 1 })
-        : setScore({ ...score, player2: score.player2 + 1 });
-    } else {
-      setWinLineStyle("");
-    }
-    if (winner.status && winner.message == "draw") {
-      setStatus("Draw");
-      const newScore = score.draw + 1;
-      setScore({ ...score, draw: newScore });
+      if (winner.status && winner.message != "draw") {
+        const line = winner.line.line[0];
+        setWinLineStyle(
+          `win-line-${currentSquares[line]}-${winner.line.position}`
+        );
+        setStatus(
+          <>
+            <span style={{ position: "relative", right: 4 }}>Winner</span>
+            {winner.message == "x" ? (
+              <X_shape style={xStyle} />
+            ) : (
+              <O_shape style={oStyle} />
+            )}
+          </>
+        );
+        winner.message == player1
+          ? setScore({ ...score, player1: score.player1 + 1 })
+          : setScore({ ...score, player2: score.player2 + 1 });
+      } else {
+        setWinLineStyle("");
+      }
+      if (winner.status && winner.message == "draw") {
+        setStatus("Draw");
+        const newScore = score.draw + 1;
+        setScore({ ...score, draw: newScore });
+      }
     }
 
     return () => {};
-  }, [currentMove, firstMove, numPlayers]);
+  }, [currentMove, firstMove, numPlayers, visibilityState]);
 
   return (
     <>
