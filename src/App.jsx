@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import O_shape from "./components/O_shape";
 import X_shape from "./components/X_shape";
 import MenuSound from "./assets/sounds/interface-click.wav";
-import CharSound from "./assets/sounds/o-click.wav";
+import CharSound from "./assets/sounds/char-sound.mp3";
 
 const menuClick = new Audio(MenuSound);
 const charClick = new Audio(CharSound);
@@ -68,7 +68,8 @@ export default function Game() {
   const [winLineStyle, setWinLineStyle] = useState("");
   const delay = 400;
   const [clicked, setClicked] = useState(false);
-  const [difficulty, setDifficulty] = useState("Hard");
+  const difficulty = ["easy", "medium", "impossible"];
+  const [indexDifficulty, setIndexDifficulty] = useState(2);
   const [numPlayers, setnumPlayers] = useState(0);
   const numPlayersStr = ["1P", "2P", "2Bot"];
   const [status, setStatus] = useState("");
@@ -139,7 +140,6 @@ export default function Game() {
     setHistory([Array(9).fill(null)]);
     setCurrentMove(0);
     setFirstMove(0);
-    setDifficulty("Hard");
     setScore({
       player1: 0,
       draw: 0,
@@ -159,11 +159,14 @@ export default function Game() {
     setClicked(false);
   }
 
-  function toggleDifficulty() {
+  function handleDifficulty() {
     if (sound == "on") {
       menuClick.play();
     }
-    difficulty == "Hard" ? setDifficulty("Easy") : setDifficulty("Hard");
+
+    indexDifficulty > 1
+      ? setIndexDifficulty(0)
+      : setIndexDifficulty((n) => n + 1);
   }
 
   function toggleSound() {
@@ -177,13 +180,17 @@ export default function Game() {
     if (numPlayers == 1) return false;
     if (!player1IsNext && !winner.status) {
       setTimeout(() => {
-        handlePlay(botPlay(currentSquares, player2, difficulty));
+        handlePlay(
+          botPlay(currentSquares, player2, difficulty[indexDifficulty])
+        );
       }, delay);
     }
 
     if (numPlayers == 2 && player1IsNext && !winner.status) {
       setTimeout(() => {
-        handlePlay(botPlay(currentSquares, player1, difficulty));
+        handlePlay(
+          botPlay(currentSquares, player1, difficulty[indexDifficulty])
+        );
       }, delay);
     }
 
@@ -287,7 +294,7 @@ export default function Game() {
             <div
               className="difficult"
               style={{ order: 1 }}
-              onClick={toggleDifficulty}
+              onClick={handleDifficulty}
             >
               <svg
                 fill="currentColor"
@@ -297,13 +304,13 @@ export default function Game() {
               >
                 <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z" />
               </svg>
-              {numPlayers != 1 && <span>{difficulty}</span>}
+              {numPlayers != 1 && <span>{difficulty[indexDifficulty]}</span>}
             </div>
             <div
               className="score-info"
               style={{ order: firstMove == 0 ? 2 : 4 }}
             >
-              <p className="name">
+              <div className="name">
                 {numPlayers == 2 ? <BotIcon /> : <UserIcon />}(
                 {player1 == "o" ? (
                   <O_shape style={oStyle} />
@@ -311,7 +318,7 @@ export default function Game() {
                   <X_shape style={xStyle} />
                 )}
                 )
-              </p>
+              </div>
               <p className="score">{score.player1}</p>
             </div>
             <div className="score-info" style={{ order: 3 }}>
@@ -341,7 +348,7 @@ export default function Game() {
               className="score-info"
               style={{ order: firstMove == 1 ? 2 : 4 }}
             >
-              <p className="name">
+              <div className="name">
                 {numPlayers != 1 ? <BotIcon /> : <UserIcon />}(
                 {player2 == "o" ? (
                   <O_shape style={oStyle} />
@@ -349,7 +356,7 @@ export default function Game() {
                   <X_shape style={xStyle} />
                 )}
                 )
-              </p>
+              </div>
               <p className="score">{score.player2}</p>
             </div>
             <div
@@ -403,7 +410,7 @@ function BotIcon() {
   );
 }
 
-function botPlay(currentSquares, char, difficulty = "Hard") {
+function botPlay(currentSquares, char, difficulty) {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -415,102 +422,176 @@ function botPlay(currentSquares, char, difficulty = "Hard") {
     [2, 4, 6],
   ];
   const squares = currentSquares.slice();
-  // to choose the winning square line
 
-  if (difficulty == "Hard") {
+  const newSquares = [];
+  function botTodo(todo) {
     for (let line of lines) {
       const [a, b, c] = line;
-      if (
-        squares[a] != null &&
-        squares[a] == char &&
-        squares[c] == char &&
-        squares[b] == null
-      ) {
-        squares[b] = char;
-        return squares;
-      }
-      if (
-        squares[a] != null &&
-        squares[a] == char &&
-        squares[b] == char &&
-        squares[c] == null
-      ) {
-        squares[c] = char;
-        return squares;
-      }
-      if (
-        squares[c] != null &&
-        squares[c] == char &&
-        squares[b] == char &&
-        squares[a] == null
-      ) {
-        squares[a] = char;
-        return squares;
-      }
-    }
-
-    // to intercept the oppenent win
-    for (let line of lines) {
-      const [a, b, c] = line;
-      if (
-        squares[a] != null &&
-        squares[a] == squares[c] &&
-        squares[b] == null
-      ) {
-        squares[b] = char;
-        return squares;
-      }
-      if (
-        squares[a] != null &&
-        squares[a] == squares[b] &&
-        squares[c] == null
-      ) {
-        squares[c] = char;
-        return squares;
-      }
-      if (
-        squares[c] != null &&
-        squares[c] == squares[b] &&
-        squares[a] == null
-      ) {
-        squares[a] = char;
-        return squares;
-      }
-    }
-
-    //to create a win probability line
-    for (let line of lines) {
-      const [a, b, c] = line;
-      if (squares[a] == char && squares[b] == null && squares[c] == null) {
-        const rand = Math.floor(Math.random() * 2);
-        if (rand == 0) {
+      if (todo == "choose-win-line") {
+        if (
+          squares[a] != null &&
+          squares[a] == char &&
+          squares[c] == char &&
+          squares[b] == null
+        ) {
           squares[b] = char;
-        } else {
-          squares[c] = char;
+          newSquares[0] = squares;
+          return true;
         }
-        return squares;
-      }
-      if (squares[a] == null && squares[b] == char && squares[c] == null) {
-        const rand = Math.floor(Math.random() * 2);
-        if (rand == 0) {
-          squares[a] = char;
-        } else {
+        if (
+          squares[a] != null &&
+          squares[a] == char &&
+          squares[b] == char &&
+          squares[c] == null
+        ) {
           squares[c] = char;
+          newSquares[0] = squares;
+          return true;
         }
-        return squares;
-      }
-      if (squares[a] == null && squares[b] == null && squares[c] == char) {
-        const rand = Math.floor(Math.random() * 2);
-        if (rand == 0) {
+        if (
+          squares[c] != null &&
+          squares[c] == char &&
+          squares[b] == char &&
+          squares[a] == null
+        ) {
           squares[a] = char;
-        } else {
+          newSquares[0] = squares;
+          return true;
+        }
+      }
+      if (todo == "intercept") {
+        if (
+          squares[a] != null &&
+          squares[a] == squares[c] &&
+          squares[b] == null
+        ) {
           squares[b] = char;
+          newSquares[0] = squares;
+          return true;
         }
-        return squares;
+        if (
+          squares[a] != null &&
+          squares[a] == squares[b] &&
+          squares[c] == null
+        ) {
+          squares[c] = char;
+          newSquares[0] = squares;
+          return true;
+        }
+        if (
+          squares[c] != null &&
+          squares[c] == squares[b] &&
+          squares[a] == null
+        ) {
+          squares[a] = char;
+          newSquares[0] = squares;
+          return true;
+        }
+      }
+      if (todo == "win-probability") {
+        if (squares[a] == char && squares[b] == null && squares[c] == null) {
+          squares[c] = char;
+          newSquares[0] = squares;
+          return true;
+        }
+        if (squares[a] == null && squares[b] == char && squares[c] == null) {
+          const rand = Math.floor(Math.random() * 2);
+          if (rand == 0) {
+            squares[a] = char;
+          } else {
+            squares[c] = char;
+          }
+          newSquares[0] = squares;
+          return true;
+        }
+        if (squares[a] == null && squares[b] == null && squares[c] == char) {
+          squares[a] = char;
+          newSquares[0] = squares;
+          return true;
+        }
       }
     }
+
+    const sideLines = [lines[0], lines[2], lines[3], lines[5]];
+    const indexCornerSquares = [0, 2, 6, 8];
+    const cornerSquares = indexCornerSquares.map((val) => squares[val]);
+    const nullLengthCornerSquares = cornerSquares.filter(
+      (val) => val == null
+    ).length;
+    const cornerSquaresLength = indexCornerSquares.length;
+
+    if (
+      todo == "intercept-corner" &&
+      nullLengthCornerSquares == cornerSquaresLength &&
+      squares[4] != null &&
+      squares[4] != char
+    ) {
+      const indexRand =
+        indexCornerSquares[Math.floor(Math.random() * cornerSquaresLength)];
+      squares[indexRand] = char;
+
+      newSquares[0] = squares;
+      return true;
+    }
+
+    if (
+      todo == "intercept-middle" &&
+      nullLengthCornerSquares < cornerSquaresLength &&
+      squares[4] == null
+    ) {
+      squares[4] = char;
+      newSquares[0] = squares;
+      return true;
+    }
+
+    if (todo == "intercept-side-corner") {
+      for (let line of sideLines) {
+        const [a, b, c] = line;
+        if (squares[b] != null && squares[a] == null && squares[c] == null) {
+          const rand = Math.floor(Math.random() * 2);
+          if (rand == 0) {
+            squares[a] = char;
+          } else {
+            squares[c] = char;
+          }
+          newSquares[0] = squares;
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
+  if (
+    (difficulty == "medium" || difficulty == "impossible") &&
+    botTodo("choose-win-line")
+  ) {
+    return newSquares[0];
+  }
+  if (
+    (difficulty == "medium" || difficulty == "impossible") &&
+    botTodo("intercept")
+  ) {
+    return newSquares[0];
+  }
+
+  if (difficulty == "impossible" && botTodo("intercept-corner")) {
+    return newSquares[0];
+  }
+  if (difficulty == "impossible" && botTodo("intercept-middle")) {
+    return newSquares[0];
+  }
+  if (difficulty == "impossible" && botTodo("intercept-side-corner")) {
+    return newSquares[0];
+  }
+
+  if (
+    (difficulty == "medium" || difficulty == "impossible") &&
+    botTodo("win-probability")
+  ) {
+    return newSquares[0];
+  }
   //choose a square randomly
   const nullSquares = [];
   squares.forEach((square, i) => {
