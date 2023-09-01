@@ -102,21 +102,31 @@ export default function Game() {
     player2 == "x" ? <XShape style={xStyle} /> : <OShape style={oStyle} />;
 
   function handlenumPlayers() {
-    if (sound == "on") {
-      menuClick.play().then(() => {});
-    }
     restart();
-    numPlayers > 1 ? setnumPlayers(0) : setnumPlayers((n) => n + 1);
+    if (sound == "on") {
+      menuClick.play().then(() => {
+        numPlayers > 1 ? setnumPlayers(0) : setnumPlayers((n) => n + 1);
+      });
+    } else {
+      numPlayers > 1 ? setnumPlayers(0) : setnumPlayers((n) => n + 1);
+    }
   }
 
   function handlePlay(nextSquares) {
-    setTimeout(() => {
-      if (sound == "on") {
-        charClick.play().then();
-      }
+    function handleHistory() {
       const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
       setHistory(nextHistory);
       setCurrentMove(nextHistory.length - 1);
+    }
+
+    setTimeout(() => {
+      if (sound == "on") {
+        charClick.play().then(() => {
+          handleHistory();
+        });
+      } else {
+        handleHistory();
+      }
     }, delay - delay - 100);
   }
 
@@ -150,30 +160,46 @@ export default function Game() {
 
   function swapPlayer() {
     clearAllTimer();
+
+    const playerSwap = () => {
+      if (!clicked) {
+        setFirstMove(firstMove === 0 ? 1 : 0);
+        setClicked(true);
+      }
+      setClicked(false);
+    };
     if (sound === "on") {
-      menuClick.play().then(() => {});
+      menuClick.play().then(() => {
+        playerSwap();
+      });
+    } else {
+      playerSwap();
     }
-    if (!clicked) {
-      setFirstMove(firstMove === 0 ? 1 : 0);
-      setClicked(true);
-    }
-    setClicked(false);
   }
 
   function handleDifficulty() {
+    restart();
     if (sound == "on") {
-      menuClick.play().then(() => {});
+      menuClick.play().then(() => {
+        indexDifficulty > 1
+          ? setIndexDifficulty(0)
+          : setIndexDifficulty((n) => n + 1);
+      });
+    } else {
+      indexDifficulty > 1
+        ? setIndexDifficulty(0)
+        : setIndexDifficulty((n) => n + 1);
     }
-    indexDifficulty > 1
-      ? setIndexDifficulty(0)
-      : setIndexDifficulty((n) => n + 1);
   }
 
   function toggleSound() {
     if (sound == "off") {
-      menuClick.play().then(() => {});
+      menuClick.play().then(() => {
+        sound == "on" ? setSound("off") : setSound("on");
+      });
+    } else {
+      sound == "on" ? setSound("off") : setSound("on");
     }
-    sound == "on" ? setSound("off") : setSound("on");
   }
 
   function startBotPlay() {
@@ -547,7 +573,12 @@ function botPlay(currentSquares, char, difficulty) {
     if (todo == "intercept-side-corner") {
       for (let line of sideLines) {
         const [a, b, c] = line;
-        if (squares[b] != null && squares[a] == null && squares[c] == null) {
+        if (
+          squares[b] != null &&
+          squares[b] != char &&
+          squares[a] == null &&
+          squares[c] == null
+        ) {
           const rand = Math.floor(Math.random() * 2);
           if (rand == 0) {
             squares[a] = char;
