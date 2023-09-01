@@ -103,17 +103,16 @@ export default function Game() {
 
   function handlenumPlayers() {
     if (sound == "on") {
-      menuClick.play().then(() => {
-        restart();
-        numPlayers > 1 ? setnumPlayers(0) : setnumPlayers((n) => n + 1);
-      });
+      menuClick.play().then(() => {});
     }
+    restart();
+    numPlayers > 1 ? setnumPlayers(0) : setnumPlayers((n) => n + 1);
   }
 
   function handlePlay(nextSquares) {
     setTimeout(() => {
       if (sound == "on") {
-        charClick.play();
+        charClick.play().then();
       }
       const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
       setHistory(nextHistory);
@@ -152,23 +151,21 @@ export default function Game() {
   function swapPlayer() {
     clearAllTimer();
     if (sound === "on") {
-      menuClick.play().then(() => {
-        if (!clicked) {
-          setFirstMove(firstMove === 0 ? 1 : 0);
-          setClicked(true);
-        }
-        setClicked(false);
-      });
+      menuClick.play().then(() => {});
+      if (!clicked) {
+        setFirstMove(firstMove === 0 ? 1 : 0);
+        setClicked(true);
+      }
+      setClicked(false);
     }
   }
 
   function handleDifficulty() {
     if (sound == "on") {
-      menuClick.play().then(() => {
-        indexDifficulty > 1
-          ? setIndexDifficulty(0)
-          : setIndexDifficulty((n) => n + 1);
-      });
+      menuClick.play().then(() => {});
+      indexDifficulty > 1
+        ? setIndexDifficulty(0)
+        : setIndexDifficulty((n) => n + 1);
     }
   }
 
@@ -186,7 +183,7 @@ export default function Game() {
         handlePlay(
           botPlay(currentSquares, player2, difficulty[indexDifficulty])
         );
-      }, delay);
+      });
     }
 
     if (numPlayers == 2 && player1IsNext && !winner.status) {
@@ -194,14 +191,14 @@ export default function Game() {
         handlePlay(
           botPlay(currentSquares, player1, difficulty[indexDifficulty])
         );
-      }, delay);
+      });
     }
 
     setTimeout(() => {
       if (winner.status) {
         refresh();
       }
-    }, delay * 2);
+    });
   }
 
   useEffect(() => {
