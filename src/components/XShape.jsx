@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-export default function X_shape({ style = {} }) {
+export default function XShape({ style = {} }) {
   return (
     <>
       <div style={style} className={`shape-x scale-shape-x`}>

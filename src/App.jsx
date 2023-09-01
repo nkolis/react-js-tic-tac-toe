@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
-import O_shape from "./components/O_shape";
-import X_shape from "./components/X_shape";
+import OShape from "./components/OShape";
+import XShape from "./components/XShape";
 import MenuSound from "./assets/sounds/interface-click.wav";
 import CharSound from "./assets/sounds/char-sound.mp3";
 
@@ -14,8 +14,8 @@ function Square({ onSquareClick, value }) {
 
   return (
     <button className="square" onClick={handleClicked}>
-      {value == "x" ? <X_shape /> : ""}
-      {value == "o" ? <O_shape /> : ""}
+      {value == "x" ? <XShape /> : ""}
+      {value == "o" ? <OShape /> : ""}
     </button>
   );
 }
@@ -96,9 +96,9 @@ export default function Game() {
   };
 
   const smallCharPlayer1 =
-    player1 == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
+    player1 == "x" ? <XShape style={xStyle} /> : <OShape style={oStyle} />;
   const smallCharPlayer2 =
-    player2 == "x" ? <X_shape style={xStyle} /> : <O_shape style={oStyle} />;
+    player2 == "x" ? <XShape style={xStyle} /> : <OShape style={oStyle} />;
 
   function handlenumPlayers() {
     if (sound == "on") {
@@ -111,11 +111,15 @@ export default function Game() {
   function handlePlay(nextSquares) {
     setTimeout(() => {
       if (sound == "on") {
-        charClick.play();
+        charClick.play().then(() => {
+          const nextHistory = [
+            ...history.slice(0, currentMove + 1),
+            nextSquares,
+          ];
+          setHistory(nextHistory);
+          setCurrentMove(nextHistory.length - 1);
+        });
       }
-      const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
-      setHistory(nextHistory);
-      setCurrentMove(nextHistory.length - 1);
     }, delay - delay - 100);
   }
 
@@ -148,30 +152,31 @@ export default function Game() {
   }
 
   function swapPlayer() {
-    if (sound == "on") {
-      menuClick.play();
-    }
     clearAllTimer();
-    if (!clicked) {
-      firstMove == 0 ? setFirstMove(1) : setFirstMove(0);
-      setClicked(true);
+    if (sound === "on") {
+      menuClick.play().then(() => {
+        if (!clicked) {
+          setFirstMove(firstMove === 0 ? 1 : 0);
+          setClicked(true);
+        }
+        setClicked(false);
+      });
     }
-    setClicked(false);
   }
 
   function handleDifficulty() {
     if (sound == "on") {
-      menuClick.play();
+      menuClick.play().then(() => {
+        indexDifficulty > 1
+          ? setIndexDifficulty(0)
+          : setIndexDifficulty((n) => n + 1);
+      });
     }
-
-    indexDifficulty > 1
-      ? setIndexDifficulty(0)
-      : setIndexDifficulty((n) => n + 1);
   }
 
   function toggleSound() {
     if (sound == "off") {
-      menuClick.play();
+      menuClick.play().then(() => {});
     }
     sound == "on" ? setSound("off") : setSound("on");
   }
@@ -223,9 +228,9 @@ export default function Game() {
           <>
             <span style={{ position: "relative", right: 4 }}>Winner</span>
             {winner.message == "x" ? (
-              <X_shape style={xStyle} />
+              <XShape style={xStyle} />
             ) : (
-              <O_shape style={oStyle} />
+              <OShape style={oStyle} />
             )}
           </>
         );
@@ -313,9 +318,9 @@ export default function Game() {
               <div className="name">
                 {numPlayers == 2 ? <BotIcon /> : <UserIcon />}(
                 {player1 == "o" ? (
-                  <O_shape style={oStyle} />
+                  <OShape style={oStyle} />
                 ) : (
-                  <X_shape style={xStyle} />
+                  <XShape style={xStyle} />
                 )}
                 )
               </div>
@@ -351,9 +356,9 @@ export default function Game() {
               <div className="name">
                 {numPlayers != 1 ? <BotIcon /> : <UserIcon />}(
                 {player2 == "o" ? (
-                  <O_shape style={oStyle} />
+                  <OShape style={oStyle} />
                 ) : (
-                  <X_shape style={xStyle} />
+                  <XShape style={xStyle} />
                 )}
                 )
               </div>
