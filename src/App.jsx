@@ -89,6 +89,7 @@ export default function Game() {
     animation: "unset",
     backgroundColor: "var(--shape-color-o)",
   };
+
   const xStyle = {
     width: 14,
     height: 3,
@@ -102,10 +103,11 @@ export default function Game() {
 
   function handlenumPlayers() {
     if (sound == "on") {
-      menuClick.play();
+      menuClick.play().then(() => {
+        restart();
+        numPlayers > 1 ? setnumPlayers(0) : setnumPlayers((n) => n + 1);
+      });
     }
-    restart();
-    numPlayers > 1 ? setnumPlayers(0) : setnumPlayers((n) => n + 1);
   }
 
   function handlePlay(nextSquares) {
