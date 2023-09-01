@@ -152,21 +152,21 @@ export default function Game() {
     clearAllTimer();
     if (sound === "on") {
       menuClick.play().then(() => {});
-      if (!clicked) {
-        setFirstMove(firstMove === 0 ? 1 : 0);
-        setClicked(true);
-      }
-      setClicked(false);
     }
+    if (!clicked) {
+      setFirstMove(firstMove === 0 ? 1 : 0);
+      setClicked(true);
+    }
+    setClicked(false);
   }
 
   function handleDifficulty() {
     if (sound == "on") {
       menuClick.play().then(() => {});
-      indexDifficulty > 1
-        ? setIndexDifficulty(0)
-        : setIndexDifficulty((n) => n + 1);
     }
+    indexDifficulty > 1
+      ? setIndexDifficulty(0)
+      : setIndexDifficulty((n) => n + 1);
   }
 
   function toggleSound() {
@@ -183,7 +183,7 @@ export default function Game() {
         handlePlay(
           botPlay(currentSquares, player2, difficulty[indexDifficulty])
         );
-      });
+      }, delay);
     }
 
     if (numPlayers == 2 && player1IsNext && !winner.status) {
@@ -191,14 +191,14 @@ export default function Game() {
         handlePlay(
           botPlay(currentSquares, player1, difficulty[indexDifficulty])
         );
-      });
+      }, delay);
     }
 
     setTimeout(() => {
       if (winner.status) {
         refresh();
       }
-    });
+    }, delay * 2);
   }
 
   useEffect(() => {
