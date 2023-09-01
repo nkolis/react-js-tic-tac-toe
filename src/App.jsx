@@ -113,15 +113,11 @@ export default function Game() {
   function handlePlay(nextSquares) {
     setTimeout(() => {
       if (sound == "on") {
-        charClick.play().then(() => {
-          const nextHistory = [
-            ...history.slice(0, currentMove + 1),
-            nextSquares,
-          ];
-          setHistory(nextHistory);
-          setCurrentMove(nextHistory.length - 1);
-        });
+        charClick.play();
       }
+      const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+      setHistory(nextHistory);
+      setCurrentMove(nextHistory.length - 1);
     }, delay - delay - 100);
   }
 
